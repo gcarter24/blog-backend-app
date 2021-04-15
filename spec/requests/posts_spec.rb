@@ -22,4 +22,31 @@ RSpec.describe "Posts", type: :request do
       expect(posts.length).to eq(3)
     end
   end
+
+  describe "POST /posts" do
+    it "should test the create action" do
+      user = User.create!(name: "tester", email: "tester@email.com", password: "password")
+
+      jwt = JWT.encode(
+        {
+          user: user.id, # the data to encode
+          exp: 24.hours.from_now.to_i, # the expiration time
+        },
+        "random", # the secret key
+        "HS256" # the encryption algorithm
+      )
+
+      post "/api/posts", params: {
+                           title: "example title",
+                           body: "example body",
+                           image: "example image",
+                         },
+                         headers: { "Authorization" => "Bearer #{jwt}" }
+
+      post = JSON.parse(response.body)
+
+      expect(response).to have_http_status(200)
+      expect(post["title"]).to eq("example title")
+    end
+  end
 end
